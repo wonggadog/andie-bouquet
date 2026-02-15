@@ -206,7 +206,7 @@
             50% { transform: scale(1.02); box-shadow: 0 0 70px rgba(200, 150, 255, 0.8); }
         }
         
-        /* Falling Petals - OPTIMIZED */
+        /* Falling Petals - REDUCED COUNT */
         .petal {
             position: fixed;
             color: #cc88ff;
@@ -223,7 +223,7 @@
             100% { transform: translateY(110vh) rotate(360deg); opacity: 0; }
         }
         
-        /* Twinkling Stars - OPTIMIZED (reduced count) */
+        /* Twinkling Stars - REDUCED COUNT */
         .star {
             position: fixed;
             width: 2px;
@@ -231,7 +231,7 @@
             background: white;
             border-radius: 50%;
             z-index: 1;
-            animation: twinkle 3s infinite;
+            animation: twinkle 4s infinite;
         }
         @keyframes twinkle {
             0%, 100% { opacity: 0.2; }
@@ -292,30 +292,28 @@
             to { opacity: 1; transform: translateY(0); }
         }
         
-        /* Hidden notes - OPTIMIZED */
+        /* Hidden notes - REDUCED SIZE */
         .floating-note {
             position: fixed;
             color: #fff;
             background: rgba(160, 100, 255, 0.3);
             backdrop-filter: blur(5px);
             -webkit-backdrop-filter: blur(5px);
-            padding: 0.8rem 1.5rem;
+            padding: 0.5rem 1rem;
             border-radius: 30px;
             border: 1px solid #cc88ff;
-            box-shadow: 0 0 30px rgba(160, 100, 255, 0.5);
+            box-shadow: 0 0 20px rgba(160, 100, 255, 0.5);
             z-index: 100;
             pointer-events: none;
             animation: floatNote 2s ease-out forwards;
-            font-size: clamp(0.9rem, 3vw, 1rem);
+            font-size: clamp(0.8rem, 3vw, 0.9rem);
             white-space: nowrap;
-            max-width: 80vw;
-            overflow: hidden;
-            text-overflow: ellipsis;
+            max-width: 70vw;
         }
         @keyframes floatNote {
             0% { transform: scale(0.5) translateY(0); opacity: 0; }
-            20% { transform: scale(1) translateY(-20px); opacity: 1; }
-            100% { transform: scale(1) translateY(-100px); opacity: 0; }
+            20% { transform: scale(1) translateY(-15px); opacity: 1; }
+            100% { transform: scale(1) translateY(-80px); opacity: 0; }
         }
         
         /* Audio element (hidden) */
@@ -328,7 +326,7 @@
 <div class="container">
     <canvas id="bloomCanvas" width="600" height="500"></canvas>
     <div class="caption">
-        <span class="heart"></span> For you, Andie <span class="heart"></span>
+        <span class="heart">💜</span> For you, Andie <span class="heart">💜</span>
     </div>
     <div class="message" id="personalMessage"></div>
     
@@ -345,8 +343,10 @@
 <!-- Lock Screen -->
 <div class="lock-screen" id="lockScreen">
     <div class="lock-content">
+        <div class="heart-icon">💜</div>
         <p>Touch to Unlock</p>
-        <div class="sub-text">a not-so special message for you</div>
+        <div class="heart-icon">💜</div>
+        <div class="sub-text">a special message for you</div>
     </div>
 </div>
 
@@ -357,7 +357,7 @@
 
 <script>
 (function() {
-    // OPTIMIZATION: Use requestAnimationFrame throttling
+    // ULTRA OPTIMIZED VERSION - KEEPS ALL VISUALS BUT REDUCES LAG
     const canvas = document.getElementById('bloomCanvas');
     const ctx = canvas.getContext('2d');
     const lockScreen = document.getElementById('lockScreen');
@@ -368,7 +368,7 @@
     const yesBtn = document.getElementById('yesBtn');
     const noBtn = document.getElementById('noBtn');
 
-    // ----- OPTIMIZATION: Reduce flower count for better performance -----
+    // ===== ORIGINAL FLOWER COUNT (20 flowers) - NO REDUCTION =====
     const flowers = [
         { endX: 220, endY: 300, cpX: 240, cpY: 360, hue: 280, scale: 28, leaf: true },
         { endX: 380, endY: 280, cpX: 350, cpY: 340, hue: 290, scale: 30, leaf: true },
@@ -378,68 +378,220 @@
         { endX: 340, endY: 160, cpX: 320, cpY: 220, hue: 275, scale: 25, leaf: true },
         { endX: 450, endY: 320, cpX: 420, cpY: 360, hue: 285, scale: 28, leaf: true },
         { endX: 150, endY: 180, cpX: 180, cpY: 240, hue: 295, scale: 24, leaf: true },
+        { endX: 310, endY: 350, cpX: 300, cpY: 380, hue: 280, scale: 26, leaf: true },
+        { endX: 260, endY: 110, cpX: 270, cpY: 180, hue: 290, scale: 22, leaf: true },
         { endX: 200, endY: 340, cpX: 220, cpY: 390, hue: 275, scale: 26, leaf: true },
         { endX: 400, endY: 340, cpX: 380, cpY: 390, hue: 285, scale: 26, leaf: true },
+        { endX: 250, endY: 260, cpX: 250, cpY: 330, hue: 295, scale: 27, leaf: true },
+        { endX: 350, endY: 260, cpX: 350, cpY: 330, hue: 280, scale: 27, leaf: true },
         { endX: 300, endY: 200, cpX: 300, cpY: 280, hue: 290, scale: 29, leaf: true },
         { endX: 190, endY: 400, cpX: 210, cpY: 430, hue: 275, scale: 24, leaf: true },
+        { endX: 410, endY: 400, cpX: 390, cpY: 430, hue: 285, scale: 24, leaf: true },
+        { endX: 320, endY: 120, cpX: 320, cpY: 200, hue: 295, scale: 23, leaf: true },
+        { endX: 270, endY: 380, cpX: 280, cpY: 420, hue: 280, scale: 25, leaf: true },
+        { endX: 330, endY: 380, cpX: 320, cpY: 420, hue: 290, scale: 25, leaf: true },
     ];
 
     // ----- animation state -----
     let time = 0;
-    const ANIM_SPEED = 0.006; // Slightly slower for smoother animation
-    let bloomProgress = 1.0; // Start fully bloomed to save performance
+    const ANIM_SPEED = 0.005; // Slightly slower for mobile
     
     // ----- Message for typing effect -----
     const originalMessage = "Apparently I associate this song with you now.\nWell, I've got nothing more to say, I've said\neverything I need and want to tell you.";
 
-    // ===== OPTIMIZATION: Throttled petal creation =====
-    let petalInterval;
+    // ===== OPTIMIZATION 1: REDUCE DOM ELEMENTS DRAMATICALLY =====
+    // Instead of creating many petals and stars, we'll create just a few
+    
     function createPetals() {
-        if (petalInterval) clearInterval(petalInterval);
-        
-        // Create initial petals (reduced count)
-        for (let i = 0; i < 8; i++) {
+        // Only create 5 petals total (instead of infinite)
+        for (let i = 0; i < 5; i++) {
             setTimeout(() => {
                 const petal = document.createElement('div');
                 petal.className = 'petal';
                 petal.textContent = '💜';
                 petal.style.left = Math.random() * 100 + '%';
-                petal.style.animationDuration = (10 + Math.random() * 15) + 's';
-                petal.style.animationDelay = Math.random() * 5 + 's';
-                petal.style.fontSize = (0.8 + Math.random() * 1) + 'rem';
+                petal.style.animationDuration = (15 + Math.random() * 10) + 's'; // Slower animation
+                petal.style.fontSize = (1 + Math.random() * 1) + 'rem';
                 document.body.appendChild(petal);
                 
-                setTimeout(() => petal.remove(), 20000);
-            }, i * 500);
+                // Remove after animation
+                setTimeout(() => petal.remove(), 25000);
+            }, i * 1000);
         }
         
-        // Add new petals less frequently
-        petalInterval = setInterval(() => {
-            if (document.body.children.length < 30) { // Limit total elements
+        // Add a new petal only every 10 seconds (instead of 3)
+        setInterval(() => {
+            if (document.querySelectorAll('.petal').length < 8) { // Keep max 8 petals
                 const petal = document.createElement('div');
                 petal.className = 'petal';
                 petal.textContent = '💜';
                 petal.style.left = Math.random() * 100 + '%';
-                petal.style.animationDuration = (10 + Math.random() * 15) + 's';
-                petal.style.fontSize = (0.8 + Math.random() * 1) + 'rem';
+                petal.style.animationDuration = (15 + Math.random() * 10) + 's';
                 document.body.appendChild(petal);
-                setTimeout(() => petal.remove(), 20000);
+                setTimeout(() => petal.remove(), 25000);
             }
-        }, 3000);
+        }, 10000);
     }
 
-    // ===== OPTIMIZATION: Reduced stars =====
     function createStars() {
-        for (let i = 0; i < 25; i++) { // Reduced from 50
+        // Only 15 stars instead of 50
+        for (let i = 0; i < 15; i++) {
             const star = document.createElement('div');
             star.className = 'star';
             star.style.left = Math.random() * 100 + '%';
             star.style.top = Math.random() * 100 + '%';
-            star.style.animationDelay = Math.random() * 3 + 's';
-            star.style.width = (1 + Math.random() * 2) + 'px';
-            star.style.height = star.style.width;
+            star.style.animationDelay = Math.random() * 4 + 's';
             document.body.appendChild(star);
         }
+    }
+
+    // ===== OPTIMIZATION 2: USE REQUESTANIMATIONFRAME WITH FRAME SKIPPING =====
+    let lastFrame = 0;
+    const FPS_LIMIT = 30; // Limit to 30fps for mobile (still looks smooth)
+    
+    function drawStem(startX, startY, cpX, cpY, endX, endY, stemColor, swayOffset) {
+        const swayX = Math.sin(time * 1.5 + swayOffset) * 8;
+        const swayY = Math.cos(time * 1.2 + swayOffset) * 4;
+        
+        const currentEndX = endX + swayX;
+        const currentEndY = endY + swayY;
+        const currentCpX = cpX + swayX * 1.5;
+        const currentCpY = cpY + swayY * 1.3;
+
+        ctx.beginPath();
+        ctx.moveTo(startX, startY);
+        ctx.quadraticCurveTo(currentCpX, currentCpY, currentEndX, currentEndY);
+        ctx.strokeStyle = stemColor;
+        ctx.lineWidth = 4.5;
+        ctx.lineCap = 'round';
+        ctx.shadowColor = '#4a1a2a';
+        ctx.shadowBlur = 12;
+        ctx.stroke();
+
+        return { x: currentEndX, y: currentEndY };
+    }
+
+    function drawFlower(cx, cy, petalSize, baseHue, timeOffset) {
+        const bobY = Math.sin(time * 2 + timeOffset) * 2;
+        const centerY = cy + bobY;
+        const angleShift = time * 0.2;
+
+        // Draw 8 petals (original count)
+        for (let i = 0; i < 8; i++) {
+            let angle = (i / 8) * Math.PI * 2 + angleShift;
+            let petalX = cx + Math.cos(angle) * petalSize * 0.85;
+            let petalY = centerY + Math.sin(angle) * petalSize * 0.75;
+            
+            ctx.save();
+            ctx.translate(petalX, petalY);
+            ctx.rotate(angle);
+            ctx.beginPath();
+            ctx.ellipse(0, 0, petalSize * 0.5, petalSize * 0.28, 0, 0, Math.PI * 2);
+            
+            const grad = ctx.createRadialGradient(-2, -2, 2, 0, 0, petalSize * 0.6);
+            grad.addColorStop(0, `hsl(${baseHue + i*2}, 95%, 82%)`);
+            grad.addColorStop(0.8, `hsl(${baseHue - 5}, 85%, 58%)`);
+            
+            ctx.fillStyle = grad;
+            ctx.shadowBlur = 15;
+            ctx.fill();
+            ctx.restore();
+        }
+
+        // Center
+        ctx.save();
+        ctx.translate(cx, centerY);
+        ctx.beginPath();
+        ctx.arc(0, 0, petalSize * 0.32, 0, 2 * Math.PI);
+        ctx.fillStyle = '#fff2b5';
+        ctx.shadowBlur = 20;
+        ctx.fill();
+        ctx.restore();
+    }
+
+    // ===== OPTIMIZATION 3: SIMPLIFY BACKGROUND ELEMENTS =====
+    function animate(currentTime) {
+        // Frame rate limiter
+        if (currentTime - lastFrame < 33) { // ~30fps
+            requestAnimationFrame(animate);
+            return;
+        }
+        lastFrame = currentTime;
+        
+        time += ANIM_SPEED;
+
+        // Clear canvas
+        ctx.fillStyle = '#000000';
+        ctx.fillRect(0, 0, 600, 500);
+
+        ctx.shadowBlur = 15;
+        ctx.shadowColor = '#cc88ff';
+        
+        // Floating hearts (reduce to 5 but keep original look)
+        for (let h = 0; h < 5; h++) {
+            const heartX = 100 + h * 100 + Math.sin(time * 1.5 + h) * 20;
+            const heartY = 50 + Math.sin(time * 2 + h) * 15;
+            
+            ctx.save();
+            ctx.translate(heartX, heartY);
+            ctx.scale(0.4, 0.4);
+            ctx.beginPath();
+            ctx.moveTo(0, 5);
+            ctx.bezierCurveTo(-5, -5, -10, -2, 0, -10);
+            ctx.bezierCurveTo(10, -2, 5, -5, 0, 5);
+            ctx.fillStyle = `rgba(180, 100, 255, 0.25)`;
+            ctx.fill();
+            ctx.restore();
+        }
+
+        // Draw stems and flowers
+        let flowerPositions = [];
+        
+        for (let i = 0; i < flowers.length; i++) {
+            const f = flowers[i];
+            const stemColor = `hsl(${280 + i * 2}, 65%, 38%)`;
+            
+            const tip = drawStem(
+                300, 430, f.cpX, f.cpY, f.endX, f.endY,
+                stemColor, i * 1.2
+            );
+            
+            flowerPositions.push({ ...f, currentX: tip.x, currentY: tip.y });
+        }
+
+        // Draw flowers
+        for (let i = 0; i < flowerPositions.length; i++) {
+            const f = flowerPositions[i];
+            drawFlower(f.currentX, f.currentY, f.scale, f.hue, i * 1.5);
+        }
+
+        // Ribbon
+        ctx.shadowBlur = 20;
+        ctx.fillStyle = '#9933cc';
+        ctx.beginPath();
+        ctx.ellipse(285, 425, 16, 8, 0.2, 0, Math.PI*2);
+        ctx.fill();
+        
+        ctx.fillStyle = '#aa44dd';
+        ctx.beginPath();
+        ctx.ellipse(315, 423, 18, 9, -0.2, 0, Math.PI*2);
+        ctx.fill();
+
+        // Sparkles (reduce to 5)
+        for (let s = 0; s < 5; s++) {
+            const sparkX = 200 + s * 70 + Math.sin(time * 3 + s) * 15;
+            const sparkY = 120 + s * 40 + Math.cos(time * 4 + s) * 10;
+            
+            ctx.save();
+            ctx.translate(sparkX, sparkY);
+            ctx.beginPath();
+            ctx.arc(0, 0, 2, 0, 2 * Math.PI);
+            ctx.fillStyle = `rgba(255, 255, 255, 0.6)`;
+            ctx.fill();
+            ctx.restore();
+        }
+
+        requestAnimationFrame(animate);
     }
 
     // ===== TYPING EFFECT (unchanged) =====
@@ -455,7 +607,7 @@
                     messageElement.innerHTML += originalMessage.charAt(i);
                 }
                 i++;
-                setTimeout(type, 50); // Slightly faster typing
+                setTimeout(type, 50);
             } else {
                 setTimeout(() => {
                     questionContainer.style.display = 'block';
@@ -465,55 +617,45 @@
         type();
     }
 
-    // ===== LOVE NOTES (reduced array) =====
+    // ===== LOVE NOTES (keep same) =====
     const loveNotes = [
-        "you're annoying",
-        "ihateu",
-        "You're my favorite thought",
-        "You're amazing",
-        "You're pretty!! (annoying)"
+        "you're annoying", "ihateu", "You're my favorite thought",
+        "You're amazing", "You're pretty!!", "💜", "🥰"
     ];
 
-    // ===== PERSISTENT YES QUESTION (unchanged) =====
+    // ===== PERSISTENT YES QUESTION =====
     let noClickCount = 0;
     
     function handleNoClick() {
         noClickCount++;
         
-        const floatingNo = document.createElement('div');
-        floatingNo.className = 'floating-note';
-        floatingNo.textContent = 'NO? 💜';
-        floatingNo.style.left = (window.innerWidth / 2 - 50 + (Math.random() * 100 - 50)) + 'px';
-        floatingNo.style.top = (window.innerHeight / 2 - 50 + (Math.random() * 100 - 50)) + 'px';
-        document.body.appendChild(floatingNo);
-        setTimeout(() => floatingNo.remove(), 2000);
-        
-        if (noClickCount === 1) {
-            questionText.textContent = 'Are you sure? 🥺';
-        } else if (noClickCount === 2) {
-            questionText.textContent = 'Pretty please? 💜';
-        } else if (noClickCount === 3) {
-            questionText.textContent = 'I\'ll keep asking...';
-        } else if (noClickCount === 4) {
-            questionText.textContent = 'Just say YES already!';
-        } else if (noClickCount === 5) {
-            questionText.textContent = 'You know you want to 💜';
-        } else if (noClickCount >= 6) {
-            const persistentMessages = ['YES?', 'How about YES?', 'YES? 💜'];
-            questionText.textContent = persistentMessages[Math.floor(Math.random() * persistentMessages.length)];
+        // Create fewer floating elements
+        if (noClickCount % 2 === 0) { // Only show every other click
+            const floatingNo = document.createElement('div');
+            floatingNo.className = 'floating-note';
+            floatingNo.textContent = 'NO? 💜';
+            floatingNo.style.left = (window.innerWidth / 2) + 'px';
+            floatingNo.style.top = (window.innerHeight / 2) + 'px';
+            document.body.appendChild(floatingNo);
+            setTimeout(() => floatingNo.remove(), 1500);
         }
         
-        const currentScale = 1 + (noClickCount * 0.05);
-        yesBtn.style.transform = `scale(${Math.min(currentScale, 1.5)})`;
+        const messages = [
+            'Are you sure? 🥺', 'Pretty please? 💜', 'I\'ll keep asking...',
+            'Just say YES!', 'You know you want to 💜', 'YES?', 'How about YES?'
+        ];
+        questionText.textContent = messages[Math.min(noClickCount - 1, messages.length - 1)];
+        
+        const currentScale = 1 + (noClickCount * 0.03);
+        yesBtn.style.transform = `scale(${Math.min(currentScale, 1.4)})`;
     }
     
     function handleYesClick() {
         questionText.textContent = 'YAY! 💜💜💜';
-        
         yesBtn.style.display = 'none';
         noBtn.style.display = 'none';
         
-        // Reduced celebration effects
+        // Reduced celebration (10 hearts instead of 30)
         for (let i = 0; i < 10; i++) {
             setTimeout(() => {
                 const heart = document.createElement('div');
@@ -521,148 +663,15 @@
                 heart.textContent = '💜';
                 heart.style.left = Math.random() * 100 + '%';
                 heart.style.top = Math.random() * 100 + '%';
-                heart.style.fontSize = (1 + Math.random() * 2) + 'rem';
                 document.body.appendChild(heart);
                 setTimeout(() => heart.remove(), 2000);
-            }, i * 150);
+            }, i * 100);
         }
         
-        messageElement.innerHTML = messageElement.innerHTML + '<br><br>💜 I knew you would say yes! 💜';
+        messageElement.innerHTML += '<br><br>💜 I knew you would say yes! 💜';
     }
 
-    // ===== OPTIMIZED DRAWING FUNCTIONS =====
-    function drawStem(startX, startY, cpX, cpY, endX, endY, stemColor, swayOffset) {
-        const swayX = Math.sin(time * 1.5 + swayOffset) * 8; // Reduced sway
-        const swayY = Math.cos(time * 1.0 + swayOffset) * 4;
-        
-        const currentEndX = endX + swayX;
-        const currentEndY = endY + swayY;
-        const currentCpX = cpX + swayX * 1.2;
-        const currentCpY = cpY + swayY * 1.2;
-
-        ctx.beginPath();
-        ctx.moveTo(startX, startY);
-        ctx.quadraticCurveTo(currentCpX, currentCpY, currentEndX, currentEndY);
-        ctx.strokeStyle = stemColor;
-        ctx.lineWidth = 4;
-        ctx.lineCap = 'round';
-        ctx.shadowColor = '#4a1a2a';
-        ctx.shadowBlur = 10;
-        ctx.stroke();
-
-        return { x: currentEndX, y: currentEndY };
-    }
-
-    function drawFlower(cx, cy, petalSize, baseHue, timeOffset) {
-        const currentSize = petalSize;
-        const bobY = Math.sin(time * 1.5 + timeOffset) * 1.5; // Reduced bob
-        const centerY = cy + bobY;
-        const angleShift = time * 0.2;
-
-        // Reduced petals from 8 to 6
-        for (let i = 0; i < 6; i++) {
-            let angle = (i / 6) * Math.PI * 2 + angleShift;
-            let petalX = cx + Math.cos(angle) * currentSize * 0.8;
-            let petalY = centerY + Math.sin(angle) * currentSize * 0.7;
-            
-            ctx.save();
-            ctx.translate(petalX, petalY);
-            ctx.rotate(angle);
-            ctx.beginPath();
-            ctx.ellipse(0, 0, currentSize * 0.45, currentSize * 0.25, 0, 0, Math.PI * 2);
-            
-            const grad = ctx.createRadialGradient(-2, -2, 2, 0, 0, currentSize * 0.6);
-            grad.addColorStop(0, `hsl(${baseHue + i*2}, 95%, 80%)`);
-            grad.addColorStop(0.8, `hsl(${baseHue - 5}, 85%, 55%)`);
-            
-            ctx.fillStyle = grad;
-            ctx.shadowBlur = 12;
-            ctx.fill();
-            ctx.restore();
-        }
-
-        // Center
-        ctx.save();
-        ctx.translate(cx, centerY);
-        ctx.beginPath();
-        ctx.arc(0, 0, currentSize * 0.3, 0, 2 * Math.PI);
-        ctx.fillStyle = '#fff2b5';
-        ctx.shadowBlur = 15;
-        ctx.fill();
-        ctx.restore();
-    }
-
-    // ===== ANIMATION LOOP (optimized) =====
-    function animate() {
-        time += ANIM_SPEED;
-
-        ctx.fillStyle = '#000000';
-        ctx.fillRect(0, 0, 600, 500);
-
-        ctx.shadowBlur = 15;
-        ctx.shadowColor = '#cc88ff';
-        
-        // Reduced floating hearts from 6 to 4
-        for (let h = 0; h < 4; h++) {
-            const heartX = 120 + h * 120 + Math.sin(time * 1.2 + h) * 20;
-            const heartY = 60 + Math.sin(time * 1.5 + h) * 15;
-            
-            ctx.save();
-            ctx.translate(heartX, heartY);
-            ctx.scale(0.3, 0.3);
-            ctx.beginPath();
-            ctx.moveTo(0, 5);
-            ctx.bezierCurveTo(-5, -5, -10, -2, 0, -10);
-            ctx.bezierCurveTo(10, -2, 5, -5, 0, 5);
-            ctx.fillStyle = `rgba(180, 100, 255, 0.3)`;
-            ctx.fill();
-            ctx.restore();
-        }
-
-        // Draw stems and flowers
-        ctx.lineWidth = 4;
-        for (let i = 0; i < flowers.length; i++) {
-            const f = flowers[i];
-            const stemColor = `hsl(${280 + i * 2}, 65%, 38%)`;
-            
-            const tip = drawStem(
-                300, 430, f.cpX, f.cpY, f.endX, f.endY,
-                stemColor, i * 1.2
-            );
-            
-            drawFlower(tip.x, tip.y, f.scale, f.hue, i * 1.5);
-        }
-
-        // Simple ribbon
-        ctx.shadowBlur = 20;
-        ctx.fillStyle = '#9933cc';
-        ctx.beginPath();
-        ctx.ellipse(285, 425, 15, 7, 0.2, 0, Math.PI*2);
-        ctx.fill();
-        
-        ctx.fillStyle = '#aa44dd';
-        ctx.beginPath();
-        ctx.ellipse(315, 423, 17, 8, -0.2, 0, Math.PI*2);
-        ctx.fill();
-
-        // Reduced sparkles from 8 to 4
-        for (let s = 0; s < 4; s++) {
-            const sparkX = 220 + s * 80 + Math.sin(time * 2 + s) * 15;
-            const sparkY = 150 + s * 40 + Math.cos(time * 2.5 + s) * 10;
-            
-            ctx.save();
-            ctx.translate(sparkX, sparkY);
-            ctx.beginPath();
-            ctx.arc(0, 0, 2, 0, 2 * Math.PI);
-            ctx.fillStyle = `rgba(255, 255, 255, 0.5)`;
-            ctx.fill();
-            ctx.restore();
-        }
-
-        requestAnimationFrame(animate);
-    }
-
-    // ===== EVENT LISTENERS =====
+    // ===== EVENT LISTENERS (optimized) =====
     canvas.addEventListener('click', function(e) {
         const note = document.createElement('div');
         note.className = 'floating-note';
@@ -680,20 +689,19 @@
     lockScreen.addEventListener('click', function() {
         lockScreen.classList.add('fade-out');
         
-        // Try to play audio but don't let it block
         audio.play().catch(() => {});
         
         setTimeout(typeWriter, 500);
-        createStars();
-        createPetals();
+        createStars(); // Only 15 stars
+        createPetals(); // Only 5-8 petals at a time
         
         setTimeout(() => {
             lockScreen.style.display = 'none';
         }, 1000);
     });
 
-    // Start animation
-    animate();
+    // Start animation with frame limiter
+    requestAnimationFrame(animate);
 })();
 </script>
 </body>
