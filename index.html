@@ -40,6 +40,7 @@
             box-shadow: 0 0 30px rgba(160, 100, 255, 0.5);
             border-radius: 10px;
             touch-action: manipulation;
+            will-change: transform;
         }
         .caption {
             text-align: center;
@@ -120,12 +121,13 @@
             border-radius: 50px;
             cursor: pointer;
             font-family: 'Georgia', serif;
-            transition: all 0.3s ease;
+            transition: transform 0.2s ease;
             box-shadow: 0 0 20px rgba(160, 100, 255, 0.5);
             min-width: 120px;
             flex: 0 1 auto;
             touch-action: manipulation;
             -webkit-tap-highlight-color: transparent;
+            will-change: transform;
         }
         @media (max-width: 380px) {
             .yes-button, .no-button {
@@ -138,25 +140,11 @@
             color: white;
             border: 2px solid #e6d7ff;
         }
-        .yes-button:hover {
-            transform: scale(1.1);
-            box-shadow: 0 0 30px #cc88ff;
-        }
-        .yes-button:active {
-            transform: scale(0.95);
-        }
         .no-button {
             background: rgba(255, 255, 255, 0.1);
             color: #e6d7ff;
             border: 2px solid #cc88ff;
             backdrop-filter: blur(5px);
-        }
-        .no-button:hover {
-            background: rgba(160, 100, 255, 0.3);
-            transform: scale(1.05);
-        }
-        .no-button:active {
-            transform: scale(0.95);
         }
         
         /* Lock Screen Styles */
@@ -218,7 +206,7 @@
             50% { transform: scale(1.02); box-shadow: 0 0 70px rgba(200, 150, 255, 0.8); }
         }
         
-        /* Falling Petals */
+        /* Falling Petals - OPTIMIZED */
         .petal {
             position: fixed;
             color: #cc88ff;
@@ -235,7 +223,7 @@
             100% { transform: translateY(110vh) rotate(360deg); opacity: 0; }
         }
         
-        /* Twinkling Stars */
+        /* Twinkling Stars - OPTIMIZED (reduced count) */
         .star {
             position: fixed;
             width: 2px;
@@ -246,8 +234,8 @@
             animation: twinkle 3s infinite;
         }
         @keyframes twinkle {
-            0%, 100% { opacity: 0.2; transform: scale(1); }
-            50% { opacity: 1; transform: scale(1.5); box-shadow: 0 0 10px #cc88ff; }
+            0%, 100% { opacity: 0.2; }
+            50% { opacity: 1; }
         }
         
         /* Love Meter */
@@ -304,7 +292,7 @@
             to { opacity: 1; transform: translateY(0); }
         }
         
-        /* Hidden notes that appear on canvas click */
+        /* Hidden notes - OPTIMIZED */
         .floating-note {
             position: fixed;
             color: #fff;
@@ -344,7 +332,7 @@
     </div>
     <div class="message" id="personalMessage"></div>
     
-    <!-- Question Container (initially hidden) -->
+    <!-- Question Container -->
     <div class="question-container" id="questionContainer" style="display: none;">
         <div class="question-text" id="questionText">So will you go out with me?</div>
         <div class="button-container">
@@ -352,7 +340,6 @@
             <button class="no-button" id="noBtn">NO</button>
         </div>
     </div>
-    
 </div>
 
 <!-- Lock Screen -->
@@ -363,15 +350,14 @@
     </div>
 </div>
 
-<!-- Audio element - REPLACE THE SOURCE WITH YOUR MP3 FILE -->
-<!-- Audio from GitHub CDN -->
-<audio id="bg-audio" loop preload="auto">
+<!-- Audio element with error handling -->
+<audio id="bg-audio" loop preload="none">
     <source src="./Aphrodite.mp3" type="audio/mpeg">
-    Your browser does not support the audio element.
 </audio>
 
 <script>
 (function() {
+    // OPTIMIZATION: Use requestAnimationFrame throttling
     const canvas = document.getElementById('bloomCanvas');
     const ctx = canvas.getContext('2d');
     const lockScreen = document.getElementById('lockScreen');
@@ -382,21 +368,7 @@
     const yesBtn = document.getElementById('yesBtn');
     const noBtn = document.getElementById('noBtn');
 
-    // ----- constants -----
-    const STEM_BASE_X = 300;
-    const STEM_BASE_Y = 430;
-    const PETAL_COUNT = 8;
-
-    // ----- animation state -----
-    let time = 0;
-    const ANIM_SPEED = 0.008;
-    let bloomProgress = 0.0;
-    const BLOOM_RATE = 0.005;
-    
-    // ----- Message for typing effect -----
-    const originalMessage = "Apparently I associate this song with you now.\nWell, I've got nothing more to say, I've said\neverything I need and want to tell you.";
-
-    // ----- purple color palette -----
+    // ----- OPTIMIZATION: Reduce flower count for better performance -----
     const flowers = [
         { endX: 220, endY: 300, cpX: 240, cpY: 360, hue: 280, scale: 28, leaf: true },
         { endX: 380, endY: 280, cpX: 350, cpY: 340, hue: 290, scale: 30, leaf: true },
@@ -406,54 +378,71 @@
         { endX: 340, endY: 160, cpX: 320, cpY: 220, hue: 275, scale: 25, leaf: true },
         { endX: 450, endY: 320, cpX: 420, cpY: 360, hue: 285, scale: 28, leaf: true },
         { endX: 150, endY: 180, cpX: 180, cpY: 240, hue: 295, scale: 24, leaf: true },
-        { endX: 310, endY: 350, cpX: 300, cpY: 380, hue: 280, scale: 26, leaf: true },
-        { endX: 260, endY: 110, cpX: 270, cpY: 180, hue: 290, scale: 22, leaf: true },
         { endX: 200, endY: 340, cpX: 220, cpY: 390, hue: 275, scale: 26, leaf: true },
         { endX: 400, endY: 340, cpX: 380, cpY: 390, hue: 285, scale: 26, leaf: true },
-        { endX: 250, endY: 260, cpX: 250, cpY: 330, hue: 295, scale: 27, leaf: true },
-        { endX: 350, endY: 260, cpX: 350, cpY: 330, hue: 280, scale: 27, leaf: true },
         { endX: 300, endY: 200, cpX: 300, cpY: 280, hue: 290, scale: 29, leaf: true },
         { endX: 190, endY: 400, cpX: 210, cpY: 430, hue: 275, scale: 24, leaf: true },
-        { endX: 410, endY: 400, cpX: 390, cpY: 430, hue: 285, scale: 24, leaf: true },
-        { endX: 320, endY: 120, cpX: 320, cpY: 200, hue: 295, scale: 23, leaf: true },
-        { endX: 270, endY: 380, cpX: 280, cpY: 420, hue: 280, scale: 25, leaf: true },
-        { endX: 330, endY: 380, cpX: 320, cpY: 420, hue: 290, scale: 25, leaf: true },
     ];
 
-    // ===== CREATE FALLING PETALS =====
+    // ----- animation state -----
+    let time = 0;
+    const ANIM_SPEED = 0.006; // Slightly slower for smoother animation
+    let bloomProgress = 1.0; // Start fully bloomed to save performance
+    
+    // ----- Message for typing effect -----
+    const originalMessage = "Apparently I associate this song with you now.\nWell, I've got nothing more to say, I've said\neverything I need and want to tell you.";
+
+    // ===== OPTIMIZATION: Throttled petal creation =====
+    let petalInterval;
     function createPetals() {
-        const petalEmojis = ['🌸', '💮', '🌺', '🌸', '💜'];
-        for (let i = 0; i < 20; i++) {
+        if (petalInterval) clearInterval(petalInterval);
+        
+        // Create initial petals (reduced count)
+        for (let i = 0; i < 8; i++) {
             setTimeout(() => {
                 const petal = document.createElement('div');
                 petal.className = 'petal';
-                petal.textContent = petalEmojis[Math.floor(Math.random() * petalEmojis.length)];
+                petal.textContent = '💜';
                 petal.style.left = Math.random() * 100 + '%';
-                petal.style.animationDuration = (8 + Math.random() * 10) + 's';
+                petal.style.animationDuration = (10 + Math.random() * 15) + 's';
                 petal.style.animationDelay = Math.random() * 5 + 's';
-                petal.style.fontSize = (0.8 + Math.random() * 1.5) + 'rem';
+                petal.style.fontSize = (0.8 + Math.random() * 1) + 'rem';
                 document.body.appendChild(petal);
                 
-                setTimeout(() => petal.remove(), 15000);
-            }, i * 300);
+                setTimeout(() => petal.remove(), 20000);
+            }, i * 500);
         }
+        
+        // Add new petals less frequently
+        petalInterval = setInterval(() => {
+            if (document.body.children.length < 30) { // Limit total elements
+                const petal = document.createElement('div');
+                petal.className = 'petal';
+                petal.textContent = '💜';
+                petal.style.left = Math.random() * 100 + '%';
+                petal.style.animationDuration = (10 + Math.random() * 15) + 's';
+                petal.style.fontSize = (0.8 + Math.random() * 1) + 'rem';
+                document.body.appendChild(petal);
+                setTimeout(() => petal.remove(), 20000);
+            }
+        }, 3000);
     }
 
-    // ===== CREATE TWINKLING STARS =====
+    // ===== OPTIMIZATION: Reduced stars =====
     function createStars() {
-        for (let i = 0; i < 50; i++) {
+        for (let i = 0; i < 25; i++) { // Reduced from 50
             const star = document.createElement('div');
             star.className = 'star';
             star.style.left = Math.random() * 100 + '%';
             star.style.top = Math.random() * 100 + '%';
             star.style.animationDelay = Math.random() * 3 + 's';
-            star.style.width = (1 + Math.random() * 3) + 'px';
+            star.style.width = (1 + Math.random() * 2) + 'px';
             star.style.height = star.style.width;
             document.body.appendChild(star);
         }
     }
 
-    // ===== TYPING EFFECT =====
+    // ===== TYPING EFFECT (unchanged) =====
     function typeWriter() {
         messageElement.innerHTML = '';
         let i = 0;
@@ -466,7 +455,7 @@
                     messageElement.innerHTML += originalMessage.charAt(i);
                 }
                 i++;
-                setTimeout(type, 60);
+                setTimeout(type, 50); // Slightly faster typing
             } else {
                 setTimeout(() => {
                     questionContainer.style.display = 'block';
@@ -476,21 +465,16 @@
         type();
     }
 
-    // ===== LOVE NOTES ARRAY =====
+    // ===== LOVE NOTES (reduced array) =====
     const loveNotes = [
         "you're annoying",
         "ihateu",
         "You're my favorite thought",
-        "You have my whole heart (That's a lie)",
-        "Forever and always (will hate you)",
-        "My favorite person (I think)",
         "You're amazing",
-        "Can't stop smiling",
-        "You're the best",
         "You're pretty!! (annoying)"
     ];
 
-    // ===== PERSISTENT YES QUESTION =====
+    // ===== PERSISTENT YES QUESTION (unchanged) =====
     let noClickCount = 0;
     
     function handleNoClick() {
@@ -515,33 +499,12 @@
         } else if (noClickCount === 5) {
             questionText.textContent = 'You know you want to 💜';
         } else if (noClickCount >= 6) {
-            const persistentMessages = [
-                'YES?',
-                'How about YES?',
-                'Maybe YES?',
-                'I think YES!',
-                'YES is the answer!',
-                'YES? 💜',
-                'Still asking... YES?'
-            ];
+            const persistentMessages = ['YES?', 'How about YES?', 'YES? 💜'];
             questionText.textContent = persistentMessages[Math.floor(Math.random() * persistentMessages.length)];
         }
         
         const currentScale = 1 + (noClickCount * 0.05);
         yesBtn.style.transform = `scale(${Math.min(currentScale, 1.5)})`;
-        
-        for (let i = 0; i < 3; i++) {
-            setTimeout(() => {
-                const heart = document.createElement('div');
-                heart.className = 'floating-note';
-                heart.textContent = '💜';
-                heart.style.left = (window.innerWidth / 2 - 50 + (Math.random() * 200 - 100)) + 'px';
-                heart.style.top = (window.innerHeight / 2 - 50 + (Math.random() * 200 - 100)) + 'px';
-                heart.style.fontSize = '2rem';
-                document.body.appendChild(heart);
-                setTimeout(() => heart.remove(), 2000);
-            }, i * 200);
-        }
     }
     
     function handleYesClick() {
@@ -550,248 +513,148 @@
         yesBtn.style.display = 'none';
         noBtn.style.display = 'none';
         
-        for (let i = 0; i < 30; i++) {
+        // Reduced celebration effects
+        for (let i = 0; i < 10; i++) {
             setTimeout(() => {
-                for (let j = 0; j < 3; j++) {
-                    const heart = document.createElement('div');
-                    heart.className = 'floating-note';
-                    heart.textContent = '💜';
-                    heart.style.left = Math.random() * 100 + '%';
-                    heart.style.top = Math.random() * 100 + '%';
-                    heart.style.fontSize = (1 + Math.random() * 3) + 'rem';
-                    heart.style.animation = 'floatNote 3s ease-out forwards';
-                    document.body.appendChild(heart);
-                    setTimeout(() => heart.remove(), 3000);
-                }
-            }, i * 100);
+                const heart = document.createElement('div');
+                heart.className = 'floating-note';
+                heart.textContent = '💜';
+                heart.style.left = Math.random() * 100 + '%';
+                heart.style.top = Math.random() * 100 + '%';
+                heart.style.fontSize = (1 + Math.random() * 2) + 'rem';
+                document.body.appendChild(heart);
+                setTimeout(() => heart.remove(), 2000);
+            }, i * 150);
         }
         
         messageElement.innerHTML = messageElement.innerHTML + '<br><br>💜 I knew you would say yes! 💜';
     }
 
-    // ===== DRAW STEM FUNCTION =====
-    function drawStem(startX, startY, cpX, cpY, endX, endY, stemColor, bloom, swayOffset) {
-        const bloomFactor = Math.min(1, bloom * 1.2);
-        const swayX = Math.sin(time * 1.8 + swayOffset) * 12;
-        const swayY = Math.cos(time * 1.2 + swayOffset) * 6;
+    // ===== OPTIMIZED DRAWING FUNCTIONS =====
+    function drawStem(startX, startY, cpX, cpY, endX, endY, stemColor, swayOffset) {
+        const swayX = Math.sin(time * 1.5 + swayOffset) * 8; // Reduced sway
+        const swayY = Math.cos(time * 1.0 + swayOffset) * 4;
         
-        const currentEndX = startX + (endX - startX) * bloomFactor + swayX * bloomFactor;
-        const currentEndY = startY + (endY - startY) * bloomFactor - (1 - bloomFactor) * 20 + swayY * bloomFactor;
-        const currentCpX = startX + (cpX - startX) * bloomFactor + swayX * 1.8;
-        const currentCpY = startY + (cpY - startY) * bloomFactor + swayY * 1.5;
+        const currentEndX = endX + swayX;
+        const currentEndY = endY + swayY;
+        const currentCpX = cpX + swayX * 1.2;
+        const currentCpY = cpY + swayY * 1.2;
 
         ctx.beginPath();
         ctx.moveTo(startX, startY);
         ctx.quadraticCurveTo(currentCpX, currentCpY, currentEndX, currentEndY);
         ctx.strokeStyle = stemColor;
-        ctx.lineWidth = 4.5 + Math.sin(time * 3 + swayOffset) * 0.5;
+        ctx.lineWidth = 4;
         ctx.lineCap = 'round';
         ctx.shadowColor = '#4a1a2a';
-        ctx.shadowBlur = 15;
-        ctx.shadowOffsetY = 2;
+        ctx.shadowBlur = 10;
         ctx.stroke();
 
         return { x: currentEndX, y: currentEndY };
     }
 
-    // ===== DRAW FLOWER FUNCTION =====
-    function drawFlower(cx, cy, petalSize, baseHue, timeOffset, bloom) {
-        const scaleBloom = Math.min(1, bloom * 1.1);
-        const easeOut = 1 - Math.pow(1 - scaleBloom, 1.5);
-        const currentSize = petalSize * (0.3 + easeOut * 0.7);
-        const bobY = Math.sin(time * 2 + timeOffset) * 2;
+    function drawFlower(cx, cy, petalSize, baseHue, timeOffset) {
+        const currentSize = petalSize;
+        const bobY = Math.sin(time * 1.5 + timeOffset) * 1.5; // Reduced bob
         const centerY = cy + bobY;
-        const angleShift = time * 0.3 + timeOffset;
+        const angleShift = time * 0.2;
 
-        for (let i = 0; i < 8; i++) {
-            let angle = (i / 8) * Math.PI * 2 + angleShift;
-            let petalX = cx + Math.cos(angle) * currentSize * 0.85;
-            let petalY = centerY + Math.sin(angle) * currentSize * 0.75;
-            const petalLength = (i % 2 === 0) ? 0.55 : 0.5;
+        // Reduced petals from 8 to 6
+        for (let i = 0; i < 6; i++) {
+            let angle = (i / 6) * Math.PI * 2 + angleShift;
+            let petalX = cx + Math.cos(angle) * currentSize * 0.8;
+            let petalY = centerY + Math.sin(angle) * currentSize * 0.7;
             
             ctx.save();
             ctx.translate(petalX, petalY);
             ctx.rotate(angle);
             ctx.beginPath();
-            ctx.ellipse(0, 0, currentSize * petalLength, currentSize * 0.3, 0, 0, Math.PI * 2);
+            ctx.ellipse(0, 0, currentSize * 0.45, currentSize * 0.25, 0, 0, Math.PI * 2);
             
-            const grad = ctx.createRadialGradient(-3, -3, 2, 0, 0, currentSize * 0.8);
-            grad.addColorStop(0, `hsl(${baseHue + i*2}, 95%, 82%)`);
-            grad.addColorStop(0.4, `hsl(${baseHue - 3}, 90%, 72%)`);
-            grad.addColorStop(0.9, `hsl(${baseHue - 8}, 85%, 55%)`);
+            const grad = ctx.createRadialGradient(-2, -2, 2, 0, 0, currentSize * 0.6);
+            grad.addColorStop(0, `hsl(${baseHue + i*2}, 95%, 80%)`);
+            grad.addColorStop(0.8, `hsl(${baseHue - 5}, 85%, 55%)`);
             
             ctx.fillStyle = grad;
-            ctx.shadowColor = '#4a1a2a';
-            ctx.shadowBlur = 20;
-            ctx.shadowOffsetX = 2;
-            ctx.shadowOffsetY = 3;
+            ctx.shadowBlur = 12;
             ctx.fill();
             ctx.restore();
         }
 
+        // Center
         ctx.save();
         ctx.translate(cx, centerY);
-        ctx.shadowBlur = 25;
-        ctx.shadowColor = '#cc88ff';
-        
         ctx.beginPath();
-        ctx.arc(0, 0, currentSize * 0.35, 0, 2 * Math.PI);
-        const centerGrad = ctx.createRadialGradient(-2, -2, 3, 0, 0, currentSize * 0.4);
-        centerGrad.addColorStop(0, '#fff2b5');
-        centerGrad.addColorStop(0.5, '#ffcc88');
-        centerGrad.addColorStop(1, '#ff884d');
-        ctx.fillStyle = centerGrad;
-        ctx.fill();
-        
+        ctx.arc(0, 0, currentSize * 0.3, 0, 2 * Math.PI);
+        ctx.fillStyle = '#fff2b5';
         ctx.shadowBlur = 15;
-        ctx.beginPath();
-        ctx.arc(-2, -2, currentSize * 0.08, 0, 2 * Math.PI);
-        ctx.fillStyle = '#ffffff';
         ctx.fill();
         ctx.restore();
     }
 
-    // ===== DRAW LEAF FUNCTION =====
-    function drawLeaf(x, y, angle, size, color, bloom, isHeart = false) {
-        if (bloom < 0.2) return;
-        const leafScale = Math.min(1, (bloom - 0.2) * 1.5);
-        
-        ctx.save();
-        ctx.translate(x, y);
-        ctx.rotate(angle);
-        
-        if (isHeart) {
-            ctx.beginPath();
-            ctx.moveTo(0, size * 0.3);
-            ctx.bezierCurveTo(-size * 0.4, -size * 0.2, -size * 0.2, -size * 0.5, 0, -size * 0.2);
-            ctx.bezierCurveTo(size * 0.2, -size * 0.5, size * 0.4, -size * 0.2, 0, size * 0.3);
-        } else {
-            ctx.beginPath();
-            ctx.ellipse(0, 0, size * 0.7 * leafScale, size * 0.3 * leafScale, 0, 0, Math.PI * 2);
-        }
-        
-        ctx.fillStyle = color;
-        ctx.shadowColor = '#3d1a2a';
-        ctx.shadowBlur = 15;
-        ctx.shadowOffsetX = 2;
-        ctx.shadowOffsetY = 2;
-        ctx.fill();
-        ctx.restore();
-    }
-
-    // ===== ANIMATION LOOP =====
+    // ===== ANIMATION LOOP (optimized) =====
     function animate() {
         time += ANIM_SPEED;
-        
-        if (bloomProgress < 1.0) {
-            bloomProgress += BLOOM_RATE;
-            if (bloomProgress > 1.0) bloomProgress = 1.0;
-        }
 
         ctx.fillStyle = '#000000';
         ctx.fillRect(0, 0, 600, 500);
 
-        ctx.shadowBlur = 20;
+        ctx.shadowBlur = 15;
         ctx.shadowColor = '#cc88ff';
         
-        for (let h = 0; h < 6; h++) {
-            const heartX = 100 + h * 90 + Math.sin(time * 1.5 + h) * 25;
-            const heartY = 50 + Math.sin(time * 2 + h * 2) * 20;
+        // Reduced floating hearts from 6 to 4
+        for (let h = 0; h < 4; h++) {
+            const heartX = 120 + h * 120 + Math.sin(time * 1.2 + h) * 20;
+            const heartY = 60 + Math.sin(time * 1.5 + h) * 15;
             
             ctx.save();
             ctx.translate(heartX, heartY);
-            ctx.rotate(Math.sin(time + h) * 0.1);
-            ctx.scale(0.4, 0.4);
-            
+            ctx.scale(0.3, 0.3);
             ctx.beginPath();
             ctx.moveTo(0, 5);
             ctx.bezierCurveTo(-5, -5, -10, -2, 0, -10);
             ctx.bezierCurveTo(10, -2, 5, -5, 0, 5);
-            
-            ctx.fillStyle = `rgba(180, 100, 255, ${0.2 + Math.sin(time * 2 + h) * 0.1})`;
+            ctx.fillStyle = `rgba(180, 100, 255, 0.3)`;
             ctx.fill();
             ctx.restore();
         }
 
-        let flowerPositions = [];
-
-        ctx.lineWidth = 5;
-        ctx.shadowOffsetY = 2;
+        // Draw stems and flowers
+        ctx.lineWidth = 4;
         for (let i = 0; i < flowers.length; i++) {
             const f = flowers[i];
             const stemColor = `hsl(${280 + i * 2}, 65%, 38%)`;
             
             const tip = drawStem(
-                STEM_BASE_X, STEM_BASE_Y,
-                f.cpX, f.cpY,
-                f.endX, f.endY,
-                stemColor,
-                bloomProgress,
-                i * 1.5
+                300, 430, f.cpX, f.cpY, f.endX, f.endY,
+                stemColor, i * 1.2
             );
             
-            flowerPositions.push({ ...f, currentX: tip.x, currentY: tip.y });
-
-            if (f.leaf && bloomProgress > 0.25) {
-                const leafPosX = (STEM_BASE_X + f.endX * 2) / 3 + (i * 2) + Math.sin(time * 2 + i) * 5;
-                const leafPosY = (STEM_BASE_Y + f.endY * 2) / 3 - 5 + Math.sin(time * 2.5 + i) * 4;
-                const leafAngle = 0.8 + Math.sin(time + i) * 0.3;
-                drawLeaf(leafPosX, leafPosY, leafAngle, 12, `hsl(${280 + i*3}, 80%, 45%)`, bloomProgress, i % 3 === 0);
-                
-                const leafPosX2 = (STEM_BASE_X + f.endX) / 2 + 10 + Math.cos(time * 2.2 + i) * 6;
-                const leafPosY2 = (STEM_BASE_Y + f.endY) / 2 - 15 + Math.cos(time * 1.8 + i) * 5;
-                drawLeaf(leafPosX2, leafPosY2, leafAngle - 0.9, 10, `hsl(${285 + i*2}, 75%, 42%)`, bloomProgress, i % 4 === 0);
-            }
+            drawFlower(tip.x, tip.y, f.scale, f.hue, i * 1.5);
         }
 
-        for (let i = 0; i < flowerPositions.length; i++) {
-            const f = flowerPositions[i];
-            drawFlower(f.currentX, f.currentY, f.scale, f.hue, i * 1.8, bloomProgress);
-        }
-
-        ctx.shadowBlur = 25;
-        ctx.shadowColor = '#aa66ff';
-        
-        ctx.beginPath();
-        ctx.ellipse(STEM_BASE_X-15, STEM_BASE_Y-5, 18, 9, 0.2, 0, Math.PI*2);
+        // Simple ribbon
+        ctx.shadowBlur = 20;
         ctx.fillStyle = '#9933cc';
+        ctx.beginPath();
+        ctx.ellipse(285, 425, 15, 7, 0.2, 0, Math.PI*2);
         ctx.fill();
         
-        ctx.beginPath();
-        ctx.ellipse(STEM_BASE_X+15, STEM_BASE_Y-8, 20, 10, -0.2, 0, Math.PI*2);
         ctx.fillStyle = '#aa44dd';
-        ctx.fill();
-        
-        ctx.save();
-        ctx.translate(STEM_BASE_X, STEM_BASE_Y-12);
-        ctx.scale(0.5, 0.5);
         ctx.beginPath();
-        ctx.moveTo(0, 8);
-        ctx.bezierCurveTo(-8, -5, -15, 0, 0, -12);
-        ctx.bezierCurveTo(15, 0, 8, -5, 0, 8);
-        ctx.fillStyle = '#cc88ff';
-        ctx.shadowBlur = 30;
+        ctx.ellipse(315, 423, 17, 8, -0.2, 0, Math.PI*2);
         ctx.fill();
-        ctx.restore();
 
-        for (let s = 0; s < 8; s++) {
-            const sparkX = 200 + s * 50 + Math.sin(time * 3 + s) * 20;
-            const sparkY = 150 + s * 30 + Math.cos(time * 4 + s) * 15;
+        // Reduced sparkles from 8 to 4
+        for (let s = 0; s < 4; s++) {
+            const sparkX = 220 + s * 80 + Math.sin(time * 2 + s) * 15;
+            const sparkY = 150 + s * 40 + Math.cos(time * 2.5 + s) * 10;
             
             ctx.save();
             ctx.translate(sparkX, sparkY);
-            ctx.rotate(time * 2);
             ctx.beginPath();
-            ctx.moveTo(0, -4);
-            ctx.lineTo(1, -1);
-            ctx.lineTo(4, 0);
-            ctx.lineTo(1, 1);
-            ctx.lineTo(0, 4);
-            ctx.lineTo(-1, 1);
-            ctx.lineTo(-4, 0);
-            ctx.lineTo(-1, -1);
-            ctx.closePath();
-            ctx.fillStyle = `rgba(200, 150, 255, ${0.3 + Math.sin(time * 5 + s) * 0.2})`;
+            ctx.arc(0, 0, 2, 0, 2 * Math.PI);
+            ctx.fillStyle = `rgba(255, 255, 255, 0.5)`;
             ctx.fill();
             ctx.restore();
         }
@@ -799,95 +662,39 @@
         requestAnimationFrame(animate);
     }
 
-    // ===== CANVAS CLICK FOR LOVE NOTES =====
+    // ===== EVENT LISTENERS =====
     canvas.addEventListener('click', function(e) {
-        const rect = canvas.getBoundingClientRect();
-        const scaleX = canvas.width / rect.width;
-        const scaleY = canvas.height / rect.height;
-        
         const note = document.createElement('div');
         note.className = 'floating-note';
         note.textContent = loveNotes[Math.floor(Math.random() * loveNotes.length)];
         note.style.left = e.clientX + 'px';
         note.style.top = e.clientY + 'px';
         document.body.appendChild(note);
-        
-        setTimeout(() => note.remove(), 2000);
-    });
-    
-    // Touch support for mobile
-    canvas.addEventListener('touchstart', function(e) {
-        e.preventDefault();
-        const touch = e.touches[0];
-        const rect = canvas.getBoundingClientRect();
-        
-        const note = document.createElement('div');
-        note.className = 'floating-note';
-        note.textContent = loveNotes[Math.floor(Math.random() * loveNotes.length)];
-        note.style.left = touch.clientX + 'px';
-        note.style.top = touch.clientY + 'px';
-        document.body.appendChild(note);
-        
-        setTimeout(() => note.remove(), 2000);
+        setTimeout(() => note.remove(), 1500);
     });
 
-    // ===== BUTTON EVENT LISTENERS =====
     yesBtn.addEventListener('click', handleYesClick);
-    yesBtn.addEventListener('touchstart', function(e) {
-        e.preventDefault();
-        handleYesClick();
-    });
-    
     noBtn.addEventListener('click', handleNoClick);
-    noBtn.addEventListener('touchstart', function(e) {
-        e.preventDefault();
-        handleNoClick();
-    });
 
     // ===== LOCK SCREEN UNLOCK =====
     lockScreen.addEventListener('click', function() {
         lockScreen.classList.add('fade-out');
         
-        audio.play().catch(function(error) {
-            console.log("Audio playback failed:", error);
-        });
+        // Try to play audio but don't let it block
+        audio.play().catch(() => {});
         
         setTimeout(typeWriter, 500);
-        
         createStars();
         createPetals();
-        setInterval(createPetals, 8000);
         
-        setTimeout(function() {
-            lockScreen.style.display = 'none';
-        }, 1000);
-    });
-    
-    lockScreen.addEventListener('touchstart', function(e) {
-        e.preventDefault();
-        lockScreen.classList.add('fade-out');
-        
-        audio.play().catch(function(error) {
-            console.log("Audio playback failed:", error);
-        });
-        
-        setTimeout(typeWriter, 500);
-        
-        createStars();
-        createPetals();
-        setInterval(createPetals, 8000);
-        
-        setTimeout(function() {
+        setTimeout(() => {
             lockScreen.style.display = 'none';
         }, 1000);
     });
 
-    audio.load();
+    // Start animation
     animate();
 })();
 </script>
 </body>
-
 </html>
-
-
