@@ -1,0 +1,889 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
+    <title>Valentine's Day · swaying bouquet</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            background: black;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Georgia', 'Times New Roman', serif;
+            overflow-x: hidden;
+            position: relative;
+            padding: 10px;
+        }
+        .container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: relative;
+            z-index: 10;
+            width: 100%;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        canvas {
+            display: block;
+            width: 100%;
+            max-width: 600px;
+            height: auto;
+            aspect-ratio: 600/500;
+            box-shadow: 0 0 30px rgba(160, 100, 255, 0.5);
+            border-radius: 10px;
+            touch-action: manipulation;
+        }
+        .caption {
+            text-align: center;
+            margin-top: 1.5rem;
+            font-weight: 400;
+            letter-spacing: 3px;
+            color: #e6d7ff;
+            text-shadow: 0 0 20px #aa66ff, 0 0 40px #9933ff;
+            font-size: clamp(1.5rem, 6vw, 2rem);
+            font-family: 'Georgia', 'Times New Roman', serif;
+            animation: glow 2s ease-in-out infinite;
+            padding: 0 10px;
+            width: 100%;
+        }
+        @keyframes glow {
+            0%, 100% { text-shadow: 0 0 20px #aa66ff, 0 0 40px #9933ff; }
+            50% { text-shadow: 0 0 30px #cc88ff, 0 0 60px #aa44ff; }
+        }
+        .heart {
+            color: #cc88ff;
+            font-size: clamp(1.8rem, 7vw, 2.5rem);
+            animation: heartbeat 1.2s ease-in-out infinite;
+            display: inline-block;
+            margin: 0 5px;
+        }
+        @keyframes heartbeat {
+            0%, 100% { transform: scale(1); }
+            30% { transform: scale(1.2); }
+            50% { transform: scale(1.1); }
+        }
+        .message {
+            text-align: center;
+            margin-top: 0.8rem;
+            font-weight: 300;
+            letter-spacing: 1px;
+            color: #d9c9ff;
+            text-shadow: 0 0 15px #9f7aff, 0 0 30px #7f4fff;
+            font-size: clamp(1rem, 4vw, 1.3rem);
+            font-family: 'Georgia', 'Times New Roman', serif;
+            font-style: italic;
+            opacity: 0.9;
+            min-height: 120px;
+            padding: 0 15px;
+            width: 100%;
+            line-height: 1.6;
+        }
+        
+        /* Question and Buttons */
+        .question-container {
+            margin-top: 1rem;
+            text-align: center;
+            opacity: 0;
+            animation: fadeInUp 1.5s ease forwards;
+            animation-delay: 6s;
+            width: 100%;
+            padding: 0 15px;
+        }
+        .question-text {
+            color: #e6d7ff;
+            font-size: clamp(1.3rem, 5vw, 1.8rem);
+            text-shadow: 0 0 20px #aa66ff;
+            margin-bottom: 1rem;
+            font-family: 'Georgia', serif;
+            padding: 0 5px;
+        }
+        .button-container {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            align-items: center;
+            flex-wrap: wrap;
+            padding: 0 10px;
+        }
+        .yes-button, .no-button {
+            padding: 0.8rem 1.5rem;
+            font-size: clamp(1.2rem, 5vw, 1.5rem);
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            font-family: 'Georgia', serif;
+            transition: all 0.3s ease;
+            box-shadow: 0 0 20px rgba(160, 100, 255, 0.5);
+            min-width: 120px;
+            flex: 0 1 auto;
+            touch-action: manipulation;
+            -webkit-tap-highlight-color: transparent;
+        }
+        @media (max-width: 380px) {
+            .yes-button, .no-button {
+                min-width: 100px;
+                padding: 0.7rem 1rem;
+            }
+        }
+        .yes-button {
+            background: linear-gradient(45deg, #9933cc, #cc88ff);
+            color: white;
+            border: 2px solid #e6d7ff;
+        }
+        .yes-button:hover {
+            transform: scale(1.1);
+            box-shadow: 0 0 30px #cc88ff;
+        }
+        .yes-button:active {
+            transform: scale(0.95);
+        }
+        .no-button {
+            background: rgba(255, 255, 255, 0.1);
+            color: #e6d7ff;
+            border: 2px solid #cc88ff;
+            backdrop-filter: blur(5px);
+        }
+        .no-button:hover {
+            background: rgba(160, 100, 255, 0.3);
+            transform: scale(1.05);
+        }
+        .no-button:active {
+            transform: scale(0.95);
+        }
+        
+        /* Lock Screen Styles */
+        .lock-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            background-color: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+            cursor: pointer;
+            transition: opacity 1s ease;
+            padding: 20px;
+        }
+        .lock-screen.fade-out {
+            opacity: 0;
+            pointer-events: none;
+        }
+        .lock-content {
+            text-align: center;
+            color: white;
+            padding: clamp(1.5rem, 5vw, 2rem);
+            border-radius: 30px;
+            background: rgba(160, 100, 255, 0.2);
+            backdrop-filter: blur(5px);
+            -webkit-backdrop-filter: blur(5px);
+            border: 2px solid rgba(200, 150, 255, 0.5);
+            box-shadow: 0 0 50px rgba(160, 100, 255, 0.5);
+            animation: pulse 2s infinite;
+            width: 90%;
+            max-width: 400px;
+        }
+        .lock-content p {
+            font-size: clamp(1.5rem, 6vw, 2rem);
+            font-family: 'Georgia', serif;
+            color: #e6d7ff;
+            text-shadow: 0 0 20px #aa66ff;
+            margin-bottom: 1rem;
+        }
+        .lock-content .heart-icon {
+            font-size: clamp(3rem, 10vw, 4rem);
+            animation: heartbeat 1.2s ease-in-out infinite;
+            display: inline-block;
+        }
+        .lock-content .sub-text {
+            font-size: clamp(0.9rem, 3vw, 1rem);
+            opacity: 0.8;
+            margin-top: 1rem;
+            font-style: italic;
+        }
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); box-shadow: 0 0 50px rgba(160, 100, 255, 0.5); }
+            50% { transform: scale(1.02); box-shadow: 0 0 70px rgba(200, 150, 255, 0.8); }
+        }
+        
+        /* Falling Petals */
+        .petal {
+            position: fixed;
+            color: #cc88ff;
+            font-size: clamp(1rem, 4vw, 1.5rem);
+            pointer-events: none;
+            z-index: 5;
+            opacity: 0.7;
+            animation: fall linear infinite;
+            text-shadow: 0 0 10px #aa66ff;
+            will-change: transform;
+        }
+        @keyframes fall {
+            0% { transform: translateY(-10vh) rotate(0deg); opacity: 0.7; }
+            100% { transform: translateY(110vh) rotate(360deg); opacity: 0; }
+        }
+        
+        /* Twinkling Stars */
+        .star {
+            position: fixed;
+            width: 2px;
+            height: 2px;
+            background: white;
+            border-radius: 50%;
+            z-index: 1;
+            animation: twinkle 3s infinite;
+        }
+        @keyframes twinkle {
+            0%, 100% { opacity: 0.2; transform: scale(1); }
+            50% { opacity: 1; transform: scale(1.5); box-shadow: 0 0 10px #cc88ff; }
+        }
+        
+        /* Love Meter */
+        .love-meter-container {
+            margin-top: 1.5rem;
+            text-align: center;
+            opacity: 0;
+            animation: fadeInUp 1.5s ease forwards;
+            animation-delay: 3s;
+            width: 100%;
+            padding: 0 20px;
+        }
+        .love-meter {
+            width: 100%;
+            max-width: 300px;
+            height: 30px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 15px;
+            overflow: hidden;
+            position: relative;
+            border: 1px solid #cc88ff;
+            margin: 0 auto;
+        }
+        .meter-fill {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, #9933cc, #cc88ff);
+            animation: fillHeart 3s ease-out forwards;
+            animation-delay: 3.2s;
+            border-radius: 15px;
+            position: relative;
+        }
+        .meter-fill::after {
+            content: "💜";
+            position: absolute;
+            right: 5px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 1.2rem;
+        }
+        .love-meter-container span {
+            color: #e6d7ff;
+            text-shadow: 0 0 10px #aa66ff;
+            font-size: clamp(1rem, 4vw, 1.1rem);
+            display: block;
+            margin-bottom: 0.5rem;
+        }
+        @keyframes fillHeart {
+            from { width: 0%; }
+            to { width: 100%; }
+        }
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        /* Hidden notes that appear on canvas click */
+        .floating-note {
+            position: fixed;
+            color: #fff;
+            background: rgba(160, 100, 255, 0.3);
+            backdrop-filter: blur(5px);
+            -webkit-backdrop-filter: blur(5px);
+            padding: 0.8rem 1.5rem;
+            border-radius: 30px;
+            border: 1px solid #cc88ff;
+            box-shadow: 0 0 30px rgba(160, 100, 255, 0.5);
+            z-index: 100;
+            pointer-events: none;
+            animation: floatNote 2s ease-out forwards;
+            font-size: clamp(0.9rem, 3vw, 1rem);
+            white-space: nowrap;
+            max-width: 80vw;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        @keyframes floatNote {
+            0% { transform: scale(0.5) translateY(0); opacity: 0; }
+            20% { transform: scale(1) translateY(-20px); opacity: 1; }
+            100% { transform: scale(1) translateY(-100px); opacity: 0; }
+        }
+        
+        /* Audio element (hidden) */
+        #bg-audio {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <canvas id="bloomCanvas" width="600" height="500"></canvas>
+    <div class="caption">
+        <span class="heart"></span> For you, Andie <span class="heart"></span>
+    </div>
+    <div class="message" id="personalMessage"></div>
+    
+    <!-- Question Container (initially hidden) -->
+    <div class="question-container" id="questionContainer" style="display: none;">
+        <div class="question-text" id="questionText">So will you go out with me?</div>
+        <div class="button-container">
+            <button class="yes-button" id="yesBtn">YES</button>
+            <button class="no-button" id="noBtn">NO</button>
+        </div>
+    </div>
+    
+</div>
+
+<!-- Lock Screen -->
+<div class="lock-screen" id="lockScreen">
+    <div class="lock-content">
+        <p>Touch to Unlock</p>
+        <div class="sub-text">a not-so special message for you</div>
+    </div>
+</div>
+
+<!-- Audio element - REPLACE THE SOURCE WITH YOUR MP3 FILE -->
+<audio id="bg-audio" loop>
+    <source src="Aphrodite.mp3" type="audio/mpeg">
+    Your browser does not support the audio element.
+</audio>
+
+<script>
+(function() {
+    const canvas = document.getElementById('bloomCanvas');
+    const ctx = canvas.getContext('2d');
+    const lockScreen = document.getElementById('lockScreen');
+    const audio = document.getElementById('bg-audio');
+    const messageElement = document.getElementById('personalMessage');
+    const questionContainer = document.getElementById('questionContainer');
+    const questionText = document.getElementById('questionText');
+    const yesBtn = document.getElementById('yesBtn');
+    const noBtn = document.getElementById('noBtn');
+
+    // ----- constants -----
+    const STEM_BASE_X = 300;
+    const STEM_BASE_Y = 430;
+    const PETAL_COUNT = 8;
+
+    // ----- animation state -----
+    let time = 0;
+    const ANIM_SPEED = 0.008;
+    let bloomProgress = 0.0;
+    const BLOOM_RATE = 0.005;
+    
+    // ----- Message for typing effect -----
+    const originalMessage = "Apparently I associate this song with you now.\nWell, I've got nothing more to say, I've said\neverything I need and want to tell you.";
+
+    // ----- purple color palette -----
+    const flowers = [
+        { endX: 220, endY: 300, cpX: 240, cpY: 360, hue: 280, scale: 28, leaf: true },
+        { endX: 380, endY: 280, cpX: 350, cpY: 340, hue: 290, scale: 30, leaf: true },
+        { endX: 170, endY: 240, cpX: 200, cpY: 310, hue: 270, scale: 27, leaf: true },
+        { endX: 430, endY: 230, cpX: 400, cpY: 300, hue: 285, scale: 29, leaf: true },
+        { endX: 280, endY: 190, cpX: 270, cpY: 260, hue: 295, scale: 26, leaf: true },
+        { endX: 340, endY: 160, cpX: 320, cpY: 220, hue: 275, scale: 25, leaf: true },
+        { endX: 450, endY: 320, cpX: 420, cpY: 360, hue: 285, scale: 28, leaf: true },
+        { endX: 150, endY: 180, cpX: 180, cpY: 240, hue: 295, scale: 24, leaf: true },
+        { endX: 310, endY: 350, cpX: 300, cpY: 380, hue: 280, scale: 26, leaf: true },
+        { endX: 260, endY: 110, cpX: 270, cpY: 180, hue: 290, scale: 22, leaf: true },
+        { endX: 200, endY: 340, cpX: 220, cpY: 390, hue: 275, scale: 26, leaf: true },
+        { endX: 400, endY: 340, cpX: 380, cpY: 390, hue: 285, scale: 26, leaf: true },
+        { endX: 250, endY: 260, cpX: 250, cpY: 330, hue: 295, scale: 27, leaf: true },
+        { endX: 350, endY: 260, cpX: 350, cpY: 330, hue: 280, scale: 27, leaf: true },
+        { endX: 300, endY: 200, cpX: 300, cpY: 280, hue: 290, scale: 29, leaf: true },
+        { endX: 190, endY: 400, cpX: 210, cpY: 430, hue: 275, scale: 24, leaf: true },
+        { endX: 410, endY: 400, cpX: 390, cpY: 430, hue: 285, scale: 24, leaf: true },
+        { endX: 320, endY: 120, cpX: 320, cpY: 200, hue: 295, scale: 23, leaf: true },
+        { endX: 270, endY: 380, cpX: 280, cpY: 420, hue: 280, scale: 25, leaf: true },
+        { endX: 330, endY: 380, cpX: 320, cpY: 420, hue: 290, scale: 25, leaf: true },
+    ];
+
+    // ===== CREATE FALLING PETALS =====
+    function createPetals() {
+        const petalEmojis = ['🌸', '💮', '🌺', '🌸', '💜'];
+        for (let i = 0; i < 20; i++) {
+            setTimeout(() => {
+                const petal = document.createElement('div');
+                petal.className = 'petal';
+                petal.textContent = petalEmojis[Math.floor(Math.random() * petalEmojis.length)];
+                petal.style.left = Math.random() * 100 + '%';
+                petal.style.animationDuration = (8 + Math.random() * 10) + 's';
+                petal.style.animationDelay = Math.random() * 5 + 's';
+                petal.style.fontSize = (0.8 + Math.random() * 1.5) + 'rem';
+                document.body.appendChild(petal);
+                
+                setTimeout(() => petal.remove(), 15000);
+            }, i * 300);
+        }
+    }
+
+    // ===== CREATE TWINKLING STARS =====
+    function createStars() {
+        for (let i = 0; i < 50; i++) {
+            const star = document.createElement('div');
+            star.className = 'star';
+            star.style.left = Math.random() * 100 + '%';
+            star.style.top = Math.random() * 100 + '%';
+            star.style.animationDelay = Math.random() * 3 + 's';
+            star.style.width = (1 + Math.random() * 3) + 'px';
+            star.style.height = star.style.width;
+            document.body.appendChild(star);
+        }
+    }
+
+    // ===== TYPING EFFECT =====
+    function typeWriter() {
+        messageElement.innerHTML = '';
+        let i = 0;
+        
+        function type() {
+            if (i < originalMessage.length) {
+                if (originalMessage.charAt(i) === '\n') {
+                    messageElement.innerHTML += '<br>';
+                } else {
+                    messageElement.innerHTML += originalMessage.charAt(i);
+                }
+                i++;
+                setTimeout(type, 60);
+            } else {
+                setTimeout(() => {
+                    questionContainer.style.display = 'block';
+                }, 500);
+            }
+        }
+        type();
+    }
+
+    // ===== LOVE NOTES ARRAY =====
+    const loveNotes = [
+        "you're annoying",
+        "ihateu",
+        "You're my favorite thought",
+        "You have my whole heart (That's a lie)",
+        "Forever and always (will hate you)",
+        "My favorite person (I think)",
+        "You're amazing",
+        "Can't stop smiling",
+        "You're the best",
+        "You're pretty!! (annoying)"
+    ];
+
+    // ===== PERSISTENT YES QUESTION =====
+    let noClickCount = 0;
+    
+    function handleNoClick() {
+        noClickCount++;
+        
+        const floatingNo = document.createElement('div');
+        floatingNo.className = 'floating-note';
+        floatingNo.textContent = 'NO? 💜';
+        floatingNo.style.left = (window.innerWidth / 2 - 50 + (Math.random() * 100 - 50)) + 'px';
+        floatingNo.style.top = (window.innerHeight / 2 - 50 + (Math.random() * 100 - 50)) + 'px';
+        document.body.appendChild(floatingNo);
+        setTimeout(() => floatingNo.remove(), 2000);
+        
+        if (noClickCount === 1) {
+            questionText.textContent = 'Are you sure? 🥺';
+        } else if (noClickCount === 2) {
+            questionText.textContent = 'Pretty please? 💜';
+        } else if (noClickCount === 3) {
+            questionText.textContent = 'I\'ll keep asking...';
+        } else if (noClickCount === 4) {
+            questionText.textContent = 'Just say YES already!';
+        } else if (noClickCount === 5) {
+            questionText.textContent = 'You know you want to 💜';
+        } else if (noClickCount >= 6) {
+            const persistentMessages = [
+                'YES?',
+                'How about YES?',
+                'Maybe YES?',
+                'I think YES!',
+                'YES is the answer!',
+                'YES? 💜',
+                'Still asking... YES?'
+            ];
+            questionText.textContent = persistentMessages[Math.floor(Math.random() * persistentMessages.length)];
+        }
+        
+        const currentScale = 1 + (noClickCount * 0.05);
+        yesBtn.style.transform = `scale(${Math.min(currentScale, 1.5)})`;
+        
+        for (let i = 0; i < 3; i++) {
+            setTimeout(() => {
+                const heart = document.createElement('div');
+                heart.className = 'floating-note';
+                heart.textContent = '💜';
+                heart.style.left = (window.innerWidth / 2 - 50 + (Math.random() * 200 - 100)) + 'px';
+                heart.style.top = (window.innerHeight / 2 - 50 + (Math.random() * 200 - 100)) + 'px';
+                heart.style.fontSize = '2rem';
+                document.body.appendChild(heart);
+                setTimeout(() => heart.remove(), 2000);
+            }, i * 200);
+        }
+    }
+    
+    function handleYesClick() {
+        questionText.textContent = 'YAY! 💜💜💜';
+        
+        yesBtn.style.display = 'none';
+        noBtn.style.display = 'none';
+        
+        for (let i = 0; i < 30; i++) {
+            setTimeout(() => {
+                for (let j = 0; j < 3; j++) {
+                    const heart = document.createElement('div');
+                    heart.className = 'floating-note';
+                    heart.textContent = '💜';
+                    heart.style.left = Math.random() * 100 + '%';
+                    heart.style.top = Math.random() * 100 + '%';
+                    heart.style.fontSize = (1 + Math.random() * 3) + 'rem';
+                    heart.style.animation = 'floatNote 3s ease-out forwards';
+                    document.body.appendChild(heart);
+                    setTimeout(() => heart.remove(), 3000);
+                }
+            }, i * 100);
+        }
+        
+        messageElement.innerHTML = messageElement.innerHTML + '<br><br>💜 I knew you would say yes! 💜';
+    }
+
+    // ===== DRAW STEM FUNCTION =====
+    function drawStem(startX, startY, cpX, cpY, endX, endY, stemColor, bloom, swayOffset) {
+        const bloomFactor = Math.min(1, bloom * 1.2);
+        const swayX = Math.sin(time * 1.8 + swayOffset) * 12;
+        const swayY = Math.cos(time * 1.2 + swayOffset) * 6;
+        
+        const currentEndX = startX + (endX - startX) * bloomFactor + swayX * bloomFactor;
+        const currentEndY = startY + (endY - startY) * bloomFactor - (1 - bloomFactor) * 20 + swayY * bloomFactor;
+        const currentCpX = startX + (cpX - startX) * bloomFactor + swayX * 1.8;
+        const currentCpY = startY + (cpY - startY) * bloomFactor + swayY * 1.5;
+
+        ctx.beginPath();
+        ctx.moveTo(startX, startY);
+        ctx.quadraticCurveTo(currentCpX, currentCpY, currentEndX, currentEndY);
+        ctx.strokeStyle = stemColor;
+        ctx.lineWidth = 4.5 + Math.sin(time * 3 + swayOffset) * 0.5;
+        ctx.lineCap = 'round';
+        ctx.shadowColor = '#4a1a2a';
+        ctx.shadowBlur = 15;
+        ctx.shadowOffsetY = 2;
+        ctx.stroke();
+
+        return { x: currentEndX, y: currentEndY };
+    }
+
+    // ===== DRAW FLOWER FUNCTION =====
+    function drawFlower(cx, cy, petalSize, baseHue, timeOffset, bloom) {
+        const scaleBloom = Math.min(1, bloom * 1.1);
+        const easeOut = 1 - Math.pow(1 - scaleBloom, 1.5);
+        const currentSize = petalSize * (0.3 + easeOut * 0.7);
+        const bobY = Math.sin(time * 2 + timeOffset) * 2;
+        const centerY = cy + bobY;
+        const angleShift = time * 0.3 + timeOffset;
+
+        for (let i = 0; i < 8; i++) {
+            let angle = (i / 8) * Math.PI * 2 + angleShift;
+            let petalX = cx + Math.cos(angle) * currentSize * 0.85;
+            let petalY = centerY + Math.sin(angle) * currentSize * 0.75;
+            const petalLength = (i % 2 === 0) ? 0.55 : 0.5;
+            
+            ctx.save();
+            ctx.translate(petalX, petalY);
+            ctx.rotate(angle);
+            ctx.beginPath();
+            ctx.ellipse(0, 0, currentSize * petalLength, currentSize * 0.3, 0, 0, Math.PI * 2);
+            
+            const grad = ctx.createRadialGradient(-3, -3, 2, 0, 0, currentSize * 0.8);
+            grad.addColorStop(0, `hsl(${baseHue + i*2}, 95%, 82%)`);
+            grad.addColorStop(0.4, `hsl(${baseHue - 3}, 90%, 72%)`);
+            grad.addColorStop(0.9, `hsl(${baseHue - 8}, 85%, 55%)`);
+            
+            ctx.fillStyle = grad;
+            ctx.shadowColor = '#4a1a2a';
+            ctx.shadowBlur = 20;
+            ctx.shadowOffsetX = 2;
+            ctx.shadowOffsetY = 3;
+            ctx.fill();
+            ctx.restore();
+        }
+
+        ctx.save();
+        ctx.translate(cx, centerY);
+        ctx.shadowBlur = 25;
+        ctx.shadowColor = '#cc88ff';
+        
+        ctx.beginPath();
+        ctx.arc(0, 0, currentSize * 0.35, 0, 2 * Math.PI);
+        const centerGrad = ctx.createRadialGradient(-2, -2, 3, 0, 0, currentSize * 0.4);
+        centerGrad.addColorStop(0, '#fff2b5');
+        centerGrad.addColorStop(0.5, '#ffcc88');
+        centerGrad.addColorStop(1, '#ff884d');
+        ctx.fillStyle = centerGrad;
+        ctx.fill();
+        
+        ctx.shadowBlur = 15;
+        ctx.beginPath();
+        ctx.arc(-2, -2, currentSize * 0.08, 0, 2 * Math.PI);
+        ctx.fillStyle = '#ffffff';
+        ctx.fill();
+        ctx.restore();
+    }
+
+    // ===== DRAW LEAF FUNCTION =====
+    function drawLeaf(x, y, angle, size, color, bloom, isHeart = false) {
+        if (bloom < 0.2) return;
+        const leafScale = Math.min(1, (bloom - 0.2) * 1.5);
+        
+        ctx.save();
+        ctx.translate(x, y);
+        ctx.rotate(angle);
+        
+        if (isHeart) {
+            ctx.beginPath();
+            ctx.moveTo(0, size * 0.3);
+            ctx.bezierCurveTo(-size * 0.4, -size * 0.2, -size * 0.2, -size * 0.5, 0, -size * 0.2);
+            ctx.bezierCurveTo(size * 0.2, -size * 0.5, size * 0.4, -size * 0.2, 0, size * 0.3);
+        } else {
+            ctx.beginPath();
+            ctx.ellipse(0, 0, size * 0.7 * leafScale, size * 0.3 * leafScale, 0, 0, Math.PI * 2);
+        }
+        
+        ctx.fillStyle = color;
+        ctx.shadowColor = '#3d1a2a';
+        ctx.shadowBlur = 15;
+        ctx.shadowOffsetX = 2;
+        ctx.shadowOffsetY = 2;
+        ctx.fill();
+        ctx.restore();
+    }
+
+    // ===== ANIMATION LOOP =====
+    function animate() {
+        time += ANIM_SPEED;
+        
+        if (bloomProgress < 1.0) {
+            bloomProgress += BLOOM_RATE;
+            if (bloomProgress > 1.0) bloomProgress = 1.0;
+        }
+
+        ctx.fillStyle = '#000000';
+        ctx.fillRect(0, 0, 600, 500);
+
+        ctx.shadowBlur = 20;
+        ctx.shadowColor = '#cc88ff';
+        
+        for (let h = 0; h < 6; h++) {
+            const heartX = 100 + h * 90 + Math.sin(time * 1.5 + h) * 25;
+            const heartY = 50 + Math.sin(time * 2 + h * 2) * 20;
+            
+            ctx.save();
+            ctx.translate(heartX, heartY);
+            ctx.rotate(Math.sin(time + h) * 0.1);
+            ctx.scale(0.4, 0.4);
+            
+            ctx.beginPath();
+            ctx.moveTo(0, 5);
+            ctx.bezierCurveTo(-5, -5, -10, -2, 0, -10);
+            ctx.bezierCurveTo(10, -2, 5, -5, 0, 5);
+            
+            ctx.fillStyle = `rgba(180, 100, 255, ${0.2 + Math.sin(time * 2 + h) * 0.1})`;
+            ctx.fill();
+            ctx.restore();
+        }
+
+        let flowerPositions = [];
+
+        ctx.lineWidth = 5;
+        ctx.shadowOffsetY = 2;
+        for (let i = 0; i < flowers.length; i++) {
+            const f = flowers[i];
+            const stemColor = `hsl(${280 + i * 2}, 65%, 38%)`;
+            
+            const tip = drawStem(
+                STEM_BASE_X, STEM_BASE_Y,
+                f.cpX, f.cpY,
+                f.endX, f.endY,
+                stemColor,
+                bloomProgress,
+                i * 1.5
+            );
+            
+            flowerPositions.push({ ...f, currentX: tip.x, currentY: tip.y });
+
+            if (f.leaf && bloomProgress > 0.25) {
+                const leafPosX = (STEM_BASE_X + f.endX * 2) / 3 + (i * 2) + Math.sin(time * 2 + i) * 5;
+                const leafPosY = (STEM_BASE_Y + f.endY * 2) / 3 - 5 + Math.sin(time * 2.5 + i) * 4;
+                const leafAngle = 0.8 + Math.sin(time + i) * 0.3;
+                drawLeaf(leafPosX, leafPosY, leafAngle, 12, `hsl(${280 + i*3}, 80%, 45%)`, bloomProgress, i % 3 === 0);
+                
+                const leafPosX2 = (STEM_BASE_X + f.endX) / 2 + 10 + Math.cos(time * 2.2 + i) * 6;
+                const leafPosY2 = (STEM_BASE_Y + f.endY) / 2 - 15 + Math.cos(time * 1.8 + i) * 5;
+                drawLeaf(leafPosX2, leafPosY2, leafAngle - 0.9, 10, `hsl(${285 + i*2}, 75%, 42%)`, bloomProgress, i % 4 === 0);
+            }
+        }
+
+        for (let i = 0; i < flowerPositions.length; i++) {
+            const f = flowerPositions[i];
+            drawFlower(f.currentX, f.currentY, f.scale, f.hue, i * 1.8, bloomProgress);
+        }
+
+        ctx.shadowBlur = 25;
+        ctx.shadowColor = '#aa66ff';
+        
+        ctx.beginPath();
+        ctx.ellipse(STEM_BASE_X-15, STEM_BASE_Y-5, 18, 9, 0.2, 0, Math.PI*2);
+        ctx.fillStyle = '#9933cc';
+        ctx.fill();
+        
+        ctx.beginPath();
+        ctx.ellipse(STEM_BASE_X+15, STEM_BASE_Y-8, 20, 10, -0.2, 0, Math.PI*2);
+        ctx.fillStyle = '#aa44dd';
+        ctx.fill();
+        
+        ctx.save();
+        ctx.translate(STEM_BASE_X, STEM_BASE_Y-12);
+        ctx.scale(0.5, 0.5);
+        ctx.beginPath();
+        ctx.moveTo(0, 8);
+        ctx.bezierCurveTo(-8, -5, -15, 0, 0, -12);
+        ctx.bezierCurveTo(15, 0, 8, -5, 0, 8);
+        ctx.fillStyle = '#cc88ff';
+        ctx.shadowBlur = 30;
+        ctx.fill();
+        ctx.restore();
+
+        for (let s = 0; s < 8; s++) {
+            const sparkX = 200 + s * 50 + Math.sin(time * 3 + s) * 20;
+            const sparkY = 150 + s * 30 + Math.cos(time * 4 + s) * 15;
+            
+            ctx.save();
+            ctx.translate(sparkX, sparkY);
+            ctx.rotate(time * 2);
+            ctx.beginPath();
+            ctx.moveTo(0, -4);
+            ctx.lineTo(1, -1);
+            ctx.lineTo(4, 0);
+            ctx.lineTo(1, 1);
+            ctx.lineTo(0, 4);
+            ctx.lineTo(-1, 1);
+            ctx.lineTo(-4, 0);
+            ctx.lineTo(-1, -1);
+            ctx.closePath();
+            ctx.fillStyle = `rgba(200, 150, 255, ${0.3 + Math.sin(time * 5 + s) * 0.2})`;
+            ctx.fill();
+            ctx.restore();
+        }
+
+        requestAnimationFrame(animate);
+    }
+
+    // ===== CANVAS CLICK FOR LOVE NOTES =====
+    canvas.addEventListener('click', function(e) {
+        const rect = canvas.getBoundingClientRect();
+        const scaleX = canvas.width / rect.width;
+        const scaleY = canvas.height / rect.height;
+        
+        const note = document.createElement('div');
+        note.className = 'floating-note';
+        note.textContent = loveNotes[Math.floor(Math.random() * loveNotes.length)];
+        note.style.left = e.clientX + 'px';
+        note.style.top = e.clientY + 'px';
+        document.body.appendChild(note);
+        
+        setTimeout(() => note.remove(), 2000);
+    });
+    
+    // Touch support for mobile
+    canvas.addEventListener('touchstart', function(e) {
+        e.preventDefault();
+        const touch = e.touches[0];
+        const rect = canvas.getBoundingClientRect();
+        
+        const note = document.createElement('div');
+        note.className = 'floating-note';
+        note.textContent = loveNotes[Math.floor(Math.random() * loveNotes.length)];
+        note.style.left = touch.clientX + 'px';
+        note.style.top = touch.clientY + 'px';
+        document.body.appendChild(note);
+        
+        setTimeout(() => note.remove(), 2000);
+    });
+
+    // ===== BUTTON EVENT LISTENERS =====
+    yesBtn.addEventListener('click', handleYesClick);
+    yesBtn.addEventListener('touchstart', function(e) {
+        e.preventDefault();
+        handleYesClick();
+    });
+    
+    noBtn.addEventListener('click', handleNoClick);
+    noBtn.addEventListener('touchstart', function(e) {
+        e.preventDefault();
+        handleNoClick();
+    });
+
+    // ===== LOCK SCREEN UNLOCK =====
+    lockScreen.addEventListener('click', function() {
+        lockScreen.classList.add('fade-out');
+        
+        audio.play().catch(function(error) {
+            console.log("Audio playback failed:", error);
+        });
+        
+        setTimeout(typeWriter, 500);
+        
+        createStars();
+        createPetals();
+        setInterval(createPetals, 8000);
+        
+        setTimeout(function() {
+            lockScreen.style.display = 'none';
+        }, 1000);
+    });
+    
+    lockScreen.addEventListener('touchstart', function(e) {
+        e.preventDefault();
+        lockScreen.classList.add('fade-out');
+        
+        audio.play().catch(function(error) {
+            console.log("Audio playback failed:", error);
+        });
+        
+        setTimeout(typeWriter, 500);
+        
+        createStars();
+        createPetals();
+        setInterval(createPetals, 8000);
+        
+        setTimeout(function() {
+            lockScreen.style.display = 'none';
+        }, 1000);
+    });
+
+    audio.load();
+    animate();
+})();
+</script>
+</body>
+</html>
